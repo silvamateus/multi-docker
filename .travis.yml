@@ -1,0 +1,21 @@
+services:
+  - docker
+
+before_install:
+  - docker build -t mateuswtv/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run mateuswtv/react-test env CI=true yarn test
+
+after_success:
+  - docker build -t mateuswtv/multi-client ./client
+  - docker build -t mateuswtv/multi-nginx ./nginx
+  - docker build -t mateuswtv/multi-server ./server
+  - docker build -t mateuswtv/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push mateuswtv/multi-client
+  - docker push mateuswtv/multi-nginx
+  - docker push mateuswtv/multi-server
+  - docker push mateuswtv/multi-worker
